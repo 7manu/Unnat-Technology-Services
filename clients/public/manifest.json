@@ -1,0 +1,18 @@
+{
+  "name": "Unnat Technology Services Client Leads",
+  "short_name": "UTS Leads",
+  "description": "Projects, client leads, meetings, and reminders.",
+  "start_url": "/projects",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f2",
+  "theme_color": "#fff8dc",
+  "icons": [
+    {
+      "src": "/assets/img/logo-uts.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
