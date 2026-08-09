@@ -136,6 +136,7 @@ function admin_status_messages(): array
         'installed' => 'Database tables checked and content keys synchronised.',
         'password-changed' => 'The password was updated. Use it the next time you sign in.',
         'product-added' => 'Product added successfully.',
+        'product-updated' => 'Product updated successfully.',
         'product-deleted' => 'Product deleted successfully.',
         'query-completed' => 'Inquiry marked as completed.',
         'query-deleted' => 'Inquiry deleted successfully.',

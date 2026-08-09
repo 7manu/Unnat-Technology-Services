@@ -540,3 +540,9 @@
 
   .admin-user { display: none; }
 }
+
+/* Row currently loaded into the edit form above the table. */
+.admin-data-table tr.is-editing {
+  background: #fff8e6;
+  box-shadow: inset 3px 0 0 var(--blue-500);
+}

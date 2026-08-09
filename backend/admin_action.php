@@ -514,6 +514,102 @@ try {
             break;
 
         /* ---------------------------------------------------------- *
+         * Products
+         * ---------------------------------------------------------- */
+        case 'product.save':
+            $name = admin_post('name');
+            $url = admin_post('url');
+            $description = admin_post('description');
+
+            /* The products table keeps the original tight column widths. */
+            if (
+                $name === '' || mb_strlen($name) > 25
+                || $description === '' || mb_strlen($description) > 50
+                || !filter_var($url, FILTER_VALIDATE_URL) || mb_strlen($url) > 50
+            ) {
+                admin_redirect($view, 'invalid-product', $id > 0 ? ['id' => $id] : []);
+            }
+
+            $existing = $id > 0 ? admin_row('SELECT * FROM `products` WHERE `id` = ? LIMIT 1', 'i', [$id]) : null;
+            if ($id > 0 && !$existing) {
+                admin_redirect($view, 'invalid-input');
+            }
+
+            $imageName = (string) ($existing['image'] ?? '');
+            $upload = $_FILES['image'] ?? null;
+            $hasUpload = $upload && ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+            if (!$hasUpload && $id === 0) {
+                admin_redirect($view, 'invalid-product');
+            }
+
+            $newImagePath = '';
+            if ($hasUpload) {
+                $allowedTypes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/avif' => 'avif'];
+                $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
+                if ($upload['error'] !== UPLOAD_ERR_OK || !isset($allowedTypes[$mime]) || (int) $upload['size'] > 3 * 1024 * 1024) {
+                    admin_redirect($view, 'invalid-image', $id > 0 ? ['id' => $id] : []);
+                }
+
+                $newImageName = sprintf('product-%s-%s.%s', date('YmdHis'), bin2hex(random_bytes(4)), $allowedTypes[$mime]);
+                $newImagePath = admin_root() . '/assets/productimages/' . $newImageName;
+                if (!move_uploaded_file($upload['tmp_name'], $newImagePath)) {
+                    admin_redirect($view, 'error', $id > 0 ? ['id' => $id] : []);
+                }
+                $imageName = $newImageName;
+            }
+
+            try {
+                if ($id > 0) {
+                    $statement = $conn->prepare('UPDATE `products` SET `name` = ?, `url` = ?, `description` = ?, `image` = ? WHERE `id` = ?');
+                    $statement->bind_param('ssssi', $name, $url, $description, $imageName, $id);
+                } else {
+                    $statement = $conn->prepare('INSERT INTO `products` (`name`, `url`, `description`, `image`) VALUES (?, ?, ?, ?)');
+                    $statement->bind_param('ssss', $name, $url, $description, $imageName);
+                }
+                $statement->execute();
+            } catch (Throwable $exception) {
+                /* Never leave an orphaned upload behind when the write fails. */
+                if ($newImagePath !== '' && is_file($newImagePath)) {
+                    unlink($newImagePath);
+                }
+                throw $exception;
+            }
+
+            /* Replace succeeded — remove the file the product no longer uses. */
+            if ($hasUpload && $existing) {
+                $oldDirect = admin_root() . '/assets/productimages/' . basename((string) $existing['image']);
+                $oldLegacy = admin_root() . '/assets/productimages/' . basename((string) $existing['name'] . (string) $existing['image']);
+                $oldPath = is_file($oldDirect) ? $oldDirect : $oldLegacy;
+                if (is_file($oldPath) && $oldPath !== $newImagePath) {
+                    unlink($oldPath);
+                }
+            }
+
+            cms_audit($id > 0 ? 'update' : 'create', 'product', $name);
+            admin_redirect($view, $id > 0 ? 'product-updated' : 'product-added');
+            break;
+
+        case 'product.delete':
+            $existing = admin_row('SELECT `name`, `image` FROM `products` WHERE `id` = ? LIMIT 1', 'i', [$id]);
+            $statement = $conn->prepare('DELETE FROM `products` WHERE `id` = ?');
+            $statement->bind_param('i', $id);
+            $statement->execute();
+
+            if ($existing) {
+                $direct = admin_root() . '/assets/productimages/' . basename((string) $existing['image']);
+                $legacy = admin_root() . '/assets/productimages/' . basename((string) $existing['name'] . (string) $existing['image']);
+                $imagePath = is_file($direct) ? $direct : $legacy;
+                if (is_file($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
+
+            cms_audit('delete', 'product', (string) ($existing['name'] ?? $id));
+            admin_redirect($view, 'product-deleted');
+            break;
+
+        /* ---------------------------------------------------------- *
          * Global settings
          * ---------------------------------------------------------- */
         case 'settings.save':
