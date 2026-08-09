@@ -1,7 +1,46 @@
 /* ---------------------------------------------------------------------
    UTS admin control centre
-   Loaded after uts-modern.css and reuses its custom properties.
+
+   Self-contained on purpose: the panel loads only this file, with no web
+   fonts and none of the 52 KB public theme, so admin screens paint without
+   waiting on external requests.
    ------------------------------------------------------------------ */
+
+:root {
+  --ink-950: #071126;
+  --ink-900: #0b1733;
+  --ink-700: #334263;
+  --ink-600: #52617f;
+  --blue-500: #f5b82e;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+img { max-width: 100%; height: auto; }
+a { color: inherit; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: #fff;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus { left: 8px; }
 
 .admin-shell {
   min-height: 100vh;

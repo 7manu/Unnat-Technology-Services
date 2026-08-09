@@ -166,14 +166,20 @@ function admin_select(string $name, array $options, string $current, string $id 
     return $html . '</select>';
 }
 
-/** Routes that can be targeted by keywords, backlinks and SEO records. */
+/**
+ * Routes that can be targeted by keywords, backlinks and SEO records.
+ *
+ * Only slug and title are selected — the full page and article bodies are
+ * MEDIUMTEXT and have no business being loaded to fill a dropdown.
+ */
 function admin_route_options(): array
 {
     $routes = cms_seo_core_routes();
-    foreach (cms_pages(false) as $page) {
+
+    foreach (admin_rows('SELECT `slug`, `title` FROM `cms_pages` ORDER BY `title`') as $page) {
         $routes['/' . cms_page_url($page)] = 'Page: ' . $page['title'];
     }
-    foreach (cms_posts(false) as $post) {
+    foreach (admin_rows('SELECT `slug`, `title` FROM `cms_posts` ORDER BY `title`') as $post) {
         $routes['/' . cms_post_url($post)] = 'Article: ' . $post['title'];
     }
 

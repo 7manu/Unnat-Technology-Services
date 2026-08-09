@@ -13,6 +13,14 @@
  */
 declare(strict_types=1);
 
+/**
+ * Bump this whenever cms_schema_statements(), cms_schema_upgrades() or
+ * cms_defaults.php changes. The admin panel compares it against the value
+ * stored in cms_settings and only runs the installer when they differ, so a
+ * normal page load costs nothing.
+ */
+const CMS_SCHEMA_VERSION = '2026.08.09';
+
 /* =====================================================================
  * Connection
  * ================================================================== */
@@ -1324,7 +1332,36 @@ function cms_install(bool $resyncContent = true): array
         $report['errors'][] = 'admins: ' . $exception->getMessage();
     }
 
+    /* Record the version so later page loads skip all of the above. */
+    if ($report['errors'] === []) {
+        cms_mark_installed();
+    }
+
     return $report;
+}
+
+/** True when the database has not yet been set up for this code version. */
+function cms_needs_install(): bool
+{
+    return cms_setting('cms_schema_version') !== CMS_SCHEMA_VERSION;
+}
+
+function cms_mark_installed(): void
+{
+    $conn = cms_db();
+    if (!$conn instanceof mysqli) {
+        return;
+    }
+
+    try {
+        $key = 'cms_schema_version';
+        $value = CMS_SCHEMA_VERSION;
+        $statement = $conn->prepare('INSERT INTO `cms_settings` (`setting_key`, `setting_value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`)');
+        $statement->bind_param('ss', $key, $value);
+        $statement->execute();
+    } catch (Throwable $exception) {
+        error_log('UTS CMS version marker failed: ' . $exception->getMessage());
+    }
 }
 
 function cms_seo_seed(): array

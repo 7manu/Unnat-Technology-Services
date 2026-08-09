@@ -17,10 +17,11 @@ $invalidLogin = ($_GET['error'] ?? '') === 'invalid';
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="theme-color" content="#f6f9ff" />
     <link rel="icon" href="assets/images/uts-logo-removebg-removebg-preview-512x512.webp" type="image/webp" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="assets/theme/css/uts-modern.css" />
+    <?php /* Fonts load without blocking the first paint; the system stack shows meanwhile. */ ?>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" /></noscript>
     <title>Admin Login | Unnat Technology Services</title>
   </head>
   <body>

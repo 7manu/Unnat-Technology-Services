@@ -10,10 +10,9 @@ declare(strict_types=1);
 require __DIR__ . '/backend/admin/_helpers.php';
 requireAdmin('login.php');
 
-/* Create any missing tables and sync new content keys once per session. */
-if (empty($_SESSION['uts_cms_installed'])) {
+/* Create missing tables and sync content keys only after a code update. */
+if (cms_needs_install()) {
     cms_install(true);
-    $_SESSION['uts_cms_installed'] = true;
 }
 
 $menu = [
@@ -73,10 +72,7 @@ foreach ($menu as $group) {
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="theme-color" content="#f4f7fd" />
     <link rel="icon" href="assets/images/uts-logo-removebg-removebg-preview-512x512.webp" type="image/webp" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/theme/css/uts-modern.css" />
+    <?php /* The admin panel is self-contained: no web fonts, no public theme CSS. */ ?>
     <link rel="stylesheet" href="assets/theme/css/uts-admin.css" />
     <title><?= e($viewTitles[$view] ?? 'Admin') ?> | UTS Admin</title>
     <script src="assets/theme/js/uts-admin.js" defer></script>
@@ -89,8 +85,8 @@ foreach ($menu as $group) {
       <a class="brand" href="admin.php"><img src="assets/images/uts-logo-removebg-removebg-preview-512x512.webp" width="38" height="38" alt="" /><span>UTS Admin</span></a>
       <div class="admin-topbar-actions">
         <span class="admin-user" title="Signed in as"><?= e(adminName()) ?></span>
-        <a class="button button-secondary button-small" href="index.php" target="_blank" rel="noopener">View site ↗</a>
-        <a class="button button-primary button-small" href="backend/logout.php">Log out</a>
+        <a class="admin-button ghost small" href="index.php" target="_blank" rel="noopener">View site ↗</a>
+        <a class="admin-button small" href="backend/logout.php">Log out</a>
       </div>
     </header>
 
