@@ -30,7 +30,7 @@
 <?php endif; ?>
 
 <section class="table-panel">
-  <table>
+  <table class="stacked-table">
     <thead>
       <tr>
         <th>Project</th><th>Description</th><th>Progress</th><th>Status</th><th>Project URL</th>
@@ -51,27 +51,28 @@
           }
         ?>
         <tr>
-          <td><a class="row-title" href="<?= Auth::isClientUser() ? '/projects/' . $id . '/progress' : '/projects/' . $id . '/clients' ?>"><?= htmlspecialchars($project->name ?? '') ?></a></td>
-          <td><?= htmlspecialchars($project->description ?? '') ?></td>
-          <td>
+          <td data-label="Project"><a class="row-title" href="<?= Auth::isClientUser() ? '/projects/' . $id . '/progress' : '/projects/' . $id . '/clients' ?>"><?= htmlspecialchars($project->name ?? '') ?></a></td>
+          <td data-label="Description"><?= htmlspecialchars($project->description ?? '') ?></td>
+          <td data-label="Progress">
             <div class="progress-meter"><span style="width: <?= (int) ($project->completion_percent ?? 0) ?>%"></span></div>
             <small><?= (int) ($project->completion_percent ?? 0) ?>% completed</small>
           </td>
-          <td><span class="status-pill"><?= htmlspecialchars($project->status ?? 'Active') ?></span></td>
-          <td>
+          <td data-label="Status"><span class="status-pill"><?= htmlspecialchars($project->status ?? 'Active') ?></span></td>
+          <td data-label="Project URL">
             <?php if (!empty($project->project_url)): ?>
               <a class="row-title" href="<?= htmlspecialchars($project->project_url) ?>" target="_blank" rel="noopener">Open URL</a>
             <?php else: ?>-<?php endif; ?>
           </td>
           <?php if (Auth::isAdmin() || Auth::isClientUser()): ?>
-            <td>
+            <td data-label="Payment">
               <strong><?= number_format((float) ($project->total_payment ?? 0), 2) ?></strong>
               <small>Paid <?= number_format($paidTotal, 2) ?></small>
             </td>
-            <td><?= htmlspecialchars($renewalText) ?></td>
+            <td data-label="Renewal"><?= htmlspecialchars($renewalText) ?></td>
           <?php endif; ?>
-          <td class="actions">
+          <td data-label="Actions" class="actions">
             <a class="link-button" href="<?= Auth::isClientUser() ? '/projects/' . $id . '/progress' : '/projects/' . $id . '/clients' ?>">Open</a>
+            <a class="link-button" href="/projects/<?= $id ?>/billing">Billing</a>
             <?php if (Auth::isAdmin()): ?>
               <button class="link-button" type="button" data-modal-open="project-edit-<?= $id ?>">Edit</button>
               <form method="post" action="/projects/<?= $id ?>/delete" data-confirm="Delete this project and its clients?">

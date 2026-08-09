@@ -8,6 +8,8 @@ use MongoDB\Collection;
 
 final class Project
 {
+    public const PAYMENT_METHODS = ['Bank transfer', 'UPI', 'Cash', 'Cheque', 'Card', 'Other'];
+
     private Collection $collection;
 
     public function __construct()
@@ -78,6 +80,8 @@ final class Project
             'project_notes' => trim($data['project_notes'] ?? ''),
             'project_url' => trim($data['project_url'] ?? ''),
             'total_payment' => $this->money($data['total_payment'] ?? 0),
+            'tax_percent' => $this->percentDecimal($data['tax_percent'] ?? 0),
+            'billing_notes' => trim($data['billing_notes'] ?? ''),
             'part_payments' => $this->partPayments($data),
             'renewal_date' => $this->dateOrNull($data['renewal_date'] ?? ''),
             'created_at' => $now,
@@ -99,6 +103,8 @@ final class Project
             'project_notes' => trim($data['project_notes'] ?? ''),
             'project_url' => trim($data['project_url'] ?? ''),
             'total_payment' => $this->money($data['total_payment'] ?? 0),
+            'tax_percent' => $this->percentDecimal($data['tax_percent'] ?? 0),
+            'billing_notes' => trim($data['billing_notes'] ?? ''),
             'part_payments' => $this->partPayments($data),
             'renewal_date' => $this->dateOrNull($data['renewal_date'] ?? ''),
             'updated_at' => new \MongoDB\BSON\UTCDateTime(),
@@ -131,24 +137,49 @@ final class Project
         return max(0, round((float) $value, 2));
     }
 
+    private function percentDecimal(mixed $value): float
+    {
+        return max(0, min(100, round((float) $value, 2)));
+    }
+
+    /**
+     * Normalises the repeating part-payment rows.
+     *
+     * Each payment keeps a stable `id` so its receipt keeps the same URL and
+     * receipt number even when other rows are added or removed later.
+     */
     private function partPayments(array $data): array
     {
         $amounts = (array) ($data['part_payment_amount'] ?? []);
         $dates = (array) ($data['part_payment_at'] ?? []);
         $statements = (array) ($data['part_payment_statement'] ?? []);
+        $ids = (array) ($data['part_payment_id'] ?? []);
+        $methods = (array) ($data['part_payment_method'] ?? []);
+        $references = (array) ($data['part_payment_reference'] ?? []);
         $payments = [];
 
         foreach ($amounts as $index => $amount) {
             $amount = $this->money($amount);
             $paymentAt = $this->dateOrNull((string) ($dates[$index] ?? ''));
             $statement = trim((string) ($statements[$index] ?? ''));
+            $method = trim((string) ($methods[$index] ?? ''));
+            $reference = trim((string) ($references[$index] ?? ''));
             if ($amount <= 0 && !$paymentAt && $statement === '') {
                 continue;
             }
+
+            $id = trim((string) ($ids[$index] ?? ''));
+            if (!preg_match('/^[a-f\d]{12}$/i', $id)) {
+                $id = bin2hex(random_bytes(6));
+            }
+
             $payments[] = [
+                'id' => $id,
                 'amount' => $amount,
                 'payment_at' => $paymentAt,
                 'statement' => $statement,
+                'method' => in_array($method, self::PAYMENT_METHODS, true) ? $method : 'Bank transfer',
+                'reference' => $reference,
             ];
         }
 

@@ -1,0 +1,17 @@
+# Uploaded media only — never execute anything from this folder.
+php_flag engine off
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Content-Security-Policy "script-src 'none'; object-src 'none'"
+</IfModule>
+
+<FilesMatch "\.(php|php\d|phtml|phar|cgi|pl|py|sh|html?)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

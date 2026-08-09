@@ -23,7 +23,7 @@
 </section>
 
 <section class="table-panel">
-  <table>
+  <table class="stacked-table">
     <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Meeting</th><th>Actions</th></tr></thead>
     <tbody>
       <?php foreach ($clients as $client): $id = (string) $client->_id; ?>
@@ -37,15 +37,15 @@
           }
         ?>
         <tr>
-          <td><strong><?= htmlspecialchars($client->name ?? '') ?></strong><small><?= htmlspecialchars($client->address ?? '') ?></small></td>
-          <td><?= htmlspecialchars($client->mobile_phone ?? '') ?><small><?= htmlspecialchars($client->alternate_mobile_phone ?? '') ?></small></td>
-          <td><?= htmlspecialchars($client->email ?? '') ?></td>
-          <td><span class="status-pill"><?= htmlspecialchars($client->status ?? 'New') ?></span></td>
-          <td>
+          <td data-label="Name"><strong><?= htmlspecialchars($client->name ?? '') ?></strong><small><?= htmlspecialchars($client->address ?? '') ?></small></td>
+          <td data-label="Phone"><?= htmlspecialchars($client->mobile_phone ?? '') ?><small><?= htmlspecialchars($client->alternate_mobile_phone ?? '') ?></small></td>
+          <td data-label="Email"><?= htmlspecialchars($client->email ?? '') ?></td>
+          <td data-label="Status"><span class="status-pill"><?= htmlspecialchars($client->status ?? 'New') ?></span></td>
+          <td data-label="Meeting">
             <?= htmlspecialchars($meetingText) ?>
             <?php if ($isToday): ?><span class="today-pill">Today</span><?php endif; ?>
           </td>
-          <td class="actions">
+          <td data-label="Actions" class="actions">
             <button class="link-button" type="button" data-modal-open="client-edit-<?= $id ?>">Edit</button>
             <form method="post" action="/projects/<?= $projectId ?>/clients/<?= $id ?>/delete" data-confirm="Delete this client?">
               <input type="hidden" name="_csrf" value="<?= htmlspecialchars(Csrf::token()) ?>">

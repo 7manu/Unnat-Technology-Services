@@ -19,6 +19,7 @@ if (is_file($vendor)) {
 use App\Config\App;
 use App\Config\Env;
 use App\Controllers\AuthController;
+use App\Controllers\BillingController;
 use App\Controllers\ClientController;
 use App\Controllers\ClientUserController;
 use App\Controllers\ProjectController;
@@ -58,10 +59,14 @@ try {
         (new SubadminController())->destroy($m[1]);
     } elseif ($path === '/client-users' && $method === 'GET') {
         (new ClientUserController())->index();
+    } elseif (preg_match('#^/client-users/([a-f\d]{24})/preview$#i', $path, $m) && $method === 'GET') {
+        (new ClientUserController())->preview($m[1]);
     } elseif ($path === '/client-users' && $method === 'POST') {
         (new ClientUserController())->store();
     } elseif (preg_match('#^/client-users/([a-f\d]{24})$#i', $path, $m) && $method === 'POST') {
         (new ClientUserController())->update($m[1]);
+    } elseif (preg_match('#^/client-users/([a-f\d]{24})/reset-password$#i', $path, $m) && $method === 'POST') {
+        (new ClientUserController())->resetPassword($m[1]);
     } elseif (preg_match('#^/client-users/([a-f\d]{24})/delete$#i', $path, $m) && $method === 'POST') {
         (new ClientUserController())->destroy($m[1]);
     } elseif ($path === '/projects' && $method === 'POST') {
@@ -72,6 +77,12 @@ try {
         (new ProjectController())->destroy($m[1]);
     } elseif (preg_match('#^/projects/([a-f\d]{24})/progress$#i', $path, $m) && $method === 'GET') {
         (new ProjectController())->progress($m[1]);
+    } elseif (preg_match('#^/projects/([a-f\d]{24})/billing$#i', $path, $m) && $method === 'GET') {
+        (new BillingController())->index($m[1]);
+    } elseif (preg_match('#^/projects/([a-f\d]{24})/invoice$#i', $path, $m) && $method === 'GET') {
+        (new BillingController())->invoice($m[1]);
+    } elseif (preg_match('#^/projects/([a-f\d]{24})/receipt/([a-z\d]{1,24})$#i', $path, $m) && $method === 'GET') {
+        (new BillingController())->receipt($m[1], $m[2]);
     } elseif (preg_match('#^/projects/([a-f\d]{24})/clients$#i', $path, $m) && $method === 'GET') {
         (new ClientController())->index($m[1]);
     } elseif (preg_match('#^/projects/([a-f\d]{24})/clients$#i', $path, $m) && $method === 'POST') {

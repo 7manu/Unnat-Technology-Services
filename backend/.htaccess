@@ -1,0 +1,12 @@
+# Includes must never be requested directly — only the form and admin handlers.
+Options -Indexes
+
+<FilesMatch "^(_conn\.php|_conn\.local\.php|_conn\.example\.php|_admin_auth\.php|cms\.php|cms_defaults\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

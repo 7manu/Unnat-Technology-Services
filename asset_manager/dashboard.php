@@ -4,6 +4,9 @@ if (!isset($_SESSION['user'])) {
     header('Location: index.php');
     exit();
 }
+if (empty($_SESSION['expense_csrf'])) {
+    $_SESSION['expense_csrf'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -19,16 +22,12 @@ if (!isset($_SESSION['user'])) {
     <meta name="theme-color" content="#0d6efd">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="assets/js/script.js" defer></script>
+    <meta name="expense-csrf" content="<?= htmlspecialchars($_SESSION['expense_csrf'], ENT_QUOTES, 'UTF-8') ?>">
     <link rel="manifest" href="pwa/manifest.json">
-    <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/Assets/pwa/sw.js')  // ✅ Full correct path
-        .then(() => console.log("✅ Service Worker Registered"))
-        .catch(err => console.error("SW error:", err));
-    }
-    </script>
     <style>
         body.dark-mode {
             background-color: #121212;
@@ -86,7 +85,7 @@ if (!isset($_SESSION['user'])) {
 
         <div class="mb-4">
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAssetModal">➕ Add Asset</button>
-            <button class="btn btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#expenseModal">💸 Expense Tracker</button>
+            <button class="btn expense-launch-button ms-2" data-bs-toggle="modal" data-bs-target="#expenseModal"><span aria-hidden="true">₹</span> Expense Tracker</button>
         
             <input type="text" id="searchInput" class="form-control mt-3" placeholder="Search asset by name...">
             <!-- Filter Accordion -->
@@ -226,36 +225,66 @@ if (!isset($_SESSION['user'])) {
     </div>
     </div>
 
-    <!-- Expense Tracker Modal -->
-    <div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">💸 Expense Tracker</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-            <div class="row mb-3">
-            <div class="col-md-6">
-                <label>Month</label>
-                <input type="month" id="expenseMonth" class="form-control" value="<?= date('Y-m') ?>">
-                <input type="text" id="expenseSearch" class="form-control mt-2" placeholder="Search expense description...">
-            </div>
-            <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <h5>Total: ₹<span id="expenseTotal">0</span></h5>
-            </div>
-            </div>
+    <!-- Expense workspace -->
+    <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable expense-dialog">
+            <div class="modal-content expense-workspace">
+                <div class="expense-header">
+                    <div class="expense-title-wrap">
+                        <span class="expense-title-icon" aria-hidden="true">₹</span>
+                        <div><p class="expense-kicker">Finance workspace</p><h2 id="expenseModalTitle">Expense tracker</h2><p>Record spending, review the month and keep every cost easy to find.</p></div>
+                    </div>
+                    <button type="button" class="expense-close" data-bs-dismiss="modal" aria-label="Close expense tracker">×</button>
+                </div>
 
-            <div class="input-group mb-3">
-            <input type="text" id="expenseDesc" class="form-control" placeholder="Description">
-            <input type="number" id="expenseAmount" class="form-control" placeholder="₹ Amount">
-            <button class="btn btn-primary" id="addExpenseBtn">➕</button>
-            </div>
+                <div class="modal-body expense-body">
+                    <section class="expense-summary" aria-label="Monthly expense summary">
+                        <article class="expense-summary-card expense-summary-primary"><span>Total spent</span><strong id="expenseTotal">₹0.00</strong><small id="expenseMonthLabel">This month</small></article>
+                        <article class="expense-summary-card"><span>Transactions</span><strong id="expenseCount">0</strong><small>Recorded expenses</small></article>
+                        <article class="expense-summary-card"><span>Average expense</span><strong id="expenseAverage">₹0.00</strong><small>Per transaction</small></article>
+                    </section>
 
-            <ul class="list-group" id="expenseList"></ul>
-        </div>
+                    <section class="expense-toolbar" aria-label="Expense filters">
+                        <label class="expense-field"><span>Reporting month</span><input type="month" id="expenseMonth" value="<?= date('Y-m') ?>" /></label>
+                        <label class="expense-field expense-search-field"><span>Search expenses</span><input type="search" id="expenseSearch" maxlength="100" placeholder="Search by description…" autocomplete="off" /></label>
+                    </section>
+
+                    <form class="expense-add-form" id="expenseAddForm">
+                        <div class="expense-add-heading"><div><span class="expense-form-icon" aria-hidden="true">＋</span></div><div><h3>Add an expense</h3><p>Capture a new cost for the selected period.</p></div></div>
+                        <label class="expense-field"><span>Description</span><input type="text" id="expenseDesc" name="description" maxlength="255" placeholder="e.g. Software subscription" required /></label>
+                        <label class="expense-field"><span>Amount</span><div class="expense-money-input"><span>₹</span><input type="number" id="expenseAmount" name="amount" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" required /></div></label>
+                        <label class="expense-field"><span>Expense date</span><input type="date" id="expenseDate" name="date" value="<?= date('Y-m-d') ?>" required /></label>
+                        <button class="expense-primary-button" id="addExpenseBtn" type="submit"><span aria-hidden="true">＋</span> Add expense</button>
+                    </form>
+
+                    <section class="expense-records" aria-labelledby="expenseRecordsTitle">
+                        <div class="expense-records-head"><div><p class="expense-kicker">Transactions</p><h3 id="expenseRecordsTitle">Expense history</h3></div><span id="expenseResultText">Loading expenses…</span></div>
+                        <div class="expense-table-wrap">
+                            <table class="expense-table">
+                                <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+                                <tbody id="expenseList"><tr><td colspan="4"><div class="expense-state"><span class="expense-loader" aria-hidden="true"></span><strong>Loading expenses</strong><small>Please wait a moment.</small></div></td></tr></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Edit expense dialog -->
+    <div class="modal fade" id="editExpenseModal" tabindex="-1" aria-labelledby="editExpenseTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content expense-edit-card" id="expenseEditForm">
+                <div class="expense-edit-head"><div><p class="expense-kicker">Update transaction</p><h2 id="editExpenseTitle">Edit expense</h2></div><button type="button" class="expense-close" data-bs-dismiss="modal" aria-label="Close edit dialog">×</button></div>
+                <div class="expense-edit-body">
+                    <input type="hidden" id="editExpenseId" name="id" />
+                    <label class="expense-field"><span>Description</span><input type="text" id="editExpenseDesc" name="description" maxlength="255" required /></label>
+                    <label class="expense-field"><span>Amount</span><div class="expense-money-input"><span>₹</span><input type="number" id="editExpenseAmount" name="amount" min="0.01" max="9999999999.99" step="0.01" required /></div></label>
+                    <label class="expense-field"><span>Expense date</span><input type="date" id="editExpenseDate" name="date" required /></label>
+                </div>
+                <div class="expense-edit-footer"><button type="button" class="expense-secondary-button" data-bs-dismiss="modal">Cancel</button><button class="expense-primary-button" type="submit">Save changes</button></div>
+            </form>
+        </div>
     </div>
     <!-- Toast Container -->
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
@@ -394,117 +423,7 @@ if (!isset($_SESSION['user'])) {
             });
         });
 
-        function loadExpenses(month, search = '') {
-            $.get("backend/expense_handler.php", { action: "fetch", month, search })
-                .done(function (res) {
-                    $("#expenseTotal").text(res.total ?? 0);
-                    const $list = $("#expenseList").empty();
-
-                    if (res.items && res.items.length > 0) {
-                        res.items.forEach(exp => {
-                            $list.append(`
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>${exp.date} - ${exp.description}</span>
-                                    <div>
-                                        <strong class="me-2">₹${exp.amount}</strong>
-                                        <button class="btn btn-sm btn-warning edit-expense" 
-                                                data-id="${exp.id}" 
-                                                data-desc="${exp.description}" 
-                                                data-amt="${exp.amount}">✏️</button>
-                                        <button class="btn btn-sm btn-danger delete-expense" 
-                                                data-id="${exp.id}">🗑️</button>
-                                    </div>
-                                </li>
-                            `);
-                        });
-                    } else {
-                        $list.html(`<li class="list-group-item text-center text-muted">No expenses found for this month.</li>`);
-                    }
-                })
-                .fail(function (xhr) {
-                    console.error("Failed to load expenses:", xhr.responseText);
-                    showToast("❌ Failed to load expenses", true);
-                });
-        }
-
-        // Expense search input handler
-        $("#expenseSearch").on("input", function () {
-            loadExpenses($("#expenseMonth").val(), $(this).val());
-        });
-
-        // Month change handler
-        $("#expenseMonth").on("change", function () {
-            loadExpenses(this.value, $("#expenseSearch").val());
-        });
-
-        // Modal open: load current month's expenses with search
-        $('#expenseModal').on('show.bs.modal', function () {
-            loadExpenses($("#expenseMonth").val(), $("#expenseSearch").val());
-        });
-
-        $(document).ready(function () {
-            $("#addExpenseBtn").on("click", function () {
-                const desc = $("#expenseDesc").val();
-                const amt = $("#expenseAmount").val();
-                if (desc && amt > 0) {
-                    $.post("backend/expense_handler.php?action=add", {
-                        description: desc,
-                        amount: amt
-                    }, function (res) {
-                        $("#expenseDesc").val("");
-                        $("#expenseAmount").val("");
-                        loadExpenses($("#expenseMonth").val());
-                        showToast("Expense added successfully");
-                    });
-                } else {
-                    showToast("Enter valid description and amount", true);
-                }
-            });
-        });
-        
-        // DELETE Expense
-        $(document).on("click", ".delete-expense", function () {
-            const id = $(this).data("id");
-            if (confirm("Delete this expense?")) {
-                $.post("backend/expense_handler.php", {
-                    action: "delete",
-                    id: id
-                }, function (res) {
-                    if (res.success) {
-                        loadExpenses($("#expenseMonth").val());
-                        showToast("Expense deleted successfully");
-                    } else {
-                        showToast("Failed to delete", true);
-                    }
-                });
-            }
-        });
-
-        // EDIT Expense
-        $(document).on("click", ".edit-expense", function () {
-            const id = $(this).data("id");
-            const currentDesc = $(this).data("desc");
-            const currentAmt = $(this).data("amt");
-
-            const newDesc = prompt("Edit description:", currentDesc);
-            const newAmt = prompt("Edit amount:", currentAmt);
-
-            if (newDesc !== null && newAmt !== null && parseFloat(newAmt) > 0) {
-                $.post("backend/expense_handler.php", {
-                    action: "edit",
-                    id: id,
-                    description: newDesc,
-                    amount: newAmt
-                }, function (res) {
-                    if (res.success) {
-                        loadExpenses($("#expenseMonth").val());
-                        showToast("Expense updated successfully");
-                    } else {
-                        showToast("Failed to update", true);
-                    }
-                });
-            }
-        });
+        // Expense interactions are isolated in assets/js/script.js.
     </script>
     <script>
         // On page load, apply saved theme

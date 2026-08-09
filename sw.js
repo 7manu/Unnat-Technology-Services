@@ -1,77 +1,59 @@
-var staticCaches = ["mobirise-cache-v1"];
-var offlinePage = "offline.html"; // Add the offline page
+const CACHE_NAME = "uts-public-v9";
+const OFFLINE_URL = "offline.html";
+const CORE_ASSETS = [
+  "./",
+  "contact.html",
+  OFFLINE_URL,
+  "manifest.json",
+  "assets/theme/css/uts-modern.css",
+  "assets/theme/js/uts-modern.js",
+  "assets/theme/js/uts-assistant.js",
+  "assets/images/uts-logo-removebg-removebg-preview-512x512.webp",
+  "assets/images/linkedin.svg",
+  "assets/images/instagram.svg",
+  "assets/images/facebook.svg",
+  "assets/images/whatsapp.svg",
+];
 
-function inArray(a, c) {
-  return (
-    a.filter(function (b) {
-      return b === c;
-    }).length > 0
-  );
-}
-
-self.addEventListener("install", function (event) {
-  console.log("SW: Installed and updated");
-  event.waitUntil(
-    caches.open(staticCaches).then(function (cache) {
-      console.log("SW: Caching offline page");
-      return cache.addAll([
-        "/",
-        "manifest.json",
-        offlinePage, // Cache the offline page during installation
-      ]);
-    })
-  );
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
 });
 
-self.addEventListener("activate", function (event) {
-  console.log("SW: Activate");
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(function (cacheNames) {
-      return Promise.all(
-        cacheNames.map(function (cacheName) {
-          if (!inArray(staticCaches, cacheName)) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches
+      .keys()
+      .then((names) => Promise.all(names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", function (event) {
-  // Handle fetch events for HTTP requests
-  if (event.request.url.startsWith("http")) {
-    event.respondWith(
-      fetch(event.request)
-        .then(function (response) {
-          if (response.status === 404) {
-            return new Response("Page not found!");
-          }
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET" || !request.url.startsWith(self.location.origin)) return;
 
-          var clonedResponse = response.clone();
-          caches.open(staticCaches).then(function (cache) {
-            cache
-              .matchAll(event.request, { ignoreSearch: true })
-              .then(function (matches) {
-                return Promise.all(
-                  matches.map(function (match) {
-                    return cache.delete(match);
-                  })
-                );
-              })
-              .then(function () {
-                cache.put(event.request, clonedResponse);
-              });
-          });
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
           return response;
         })
-        .catch(function () {
-          console.log("Offline mode. Serving cached content or offline page.");
-          return caches.match(event.request).then(function (cachedResponse) {
-            return cachedResponse || caches.match(offlinePage); // Serve offline.html if no cache is found
-          });
-        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
     );
+    return;
   }
+
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response.ok && ["style", "script", "image", "font"].includes(request.destination)) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+        }
+        return response;
+      });
+    })
+  );
 });

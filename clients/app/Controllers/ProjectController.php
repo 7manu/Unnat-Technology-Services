@@ -68,13 +68,28 @@ final class ProjectController
     {
         $this->guardAdmin();
         $this->guardToken();
+        /* Billing screens post return_to so the admin lands back where they were. */
+        $returnTo = $this->safeReturnTo($_POST['return_to'] ?? '', $id);
         $errors = $this->validate($_POST);
         if ($errors || !(new Project())->update($id, $_POST)) {
             $_SESSION['flash_error'] = $errors ? implode(' ', $errors) : 'Project not found.';
-            Response::redirect('/projects');
+            Response::redirect($returnTo);
         }
         $_SESSION['flash_success'] = 'Project updated.';
-        Response::redirect('/projects');
+        Response::redirect($returnTo);
+    }
+
+    /** Only in-app project screens are accepted as a redirect target. */
+    private function safeReturnTo(mixed $value, string $projectId): string
+    {
+        $allowed = [
+            '/projects',
+            '/projects/' . $projectId . '/billing',
+            '/projects/' . $projectId . '/clients',
+            '/projects/' . $projectId . '/progress',
+        ];
+
+        return in_array((string) $value, $allowed, true) ? (string) $value : '/projects';
     }
 
     public function destroy(string $id): void
@@ -104,6 +119,16 @@ final class ProjectController
         }
         if ((float) ($data['total_payment'] ?? 0) < 0) {
             $errors[] = 'Total payment cannot be negative.';
+        }
+        $tax = (float) ($data['tax_percent'] ?? 0);
+        if ($tax < 0 || $tax > 100) {
+            $errors[] = 'Tax percentage must be between 0 and 100.';
+        }
+        foreach ((array) ($data['part_payment_amount'] ?? []) as $amount) {
+            if ($amount !== '' && (float) $amount < 0) {
+                $errors[] = 'Part payment amounts cannot be negative.';
+                break;
+            }
         }
         if (($data['renewal_date'] ?? '') !== '' && strtotime((string) $data['renewal_date']) === false) {
             $errors[] = 'Renewal date is invalid.';

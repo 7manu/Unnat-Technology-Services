@@ -8,15 +8,15 @@
 </section>
 
 <section class="table-panel">
-  <table>
+  <table class="stacked-table">
     <thead><tr><th>Name</th><th>Email</th><th>Projects</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody>
       <?php foreach ($subadmins as $subadmin): $id = (string) $subadmin->_id; ?>
         <?php $assigned = (array) ($subadmin->project_ids ?? []); ?>
         <tr>
-          <td><strong><?= htmlspecialchars($subadmin->name ?? '') ?></strong></td>
-          <td><?= htmlspecialchars($subadmin->email ?? '') ?></td>
-          <td>
+          <td data-label="Name"><strong><?= htmlspecialchars($subadmin->name ?? '') ?></strong></td>
+          <td data-label="Email"><?= htmlspecialchars($subadmin->email ?? '') ?></td>
+          <td data-label="Projects">
             <?php foreach ($projects as $project): ?>
               <?php if (in_array((string) $project->_id, $assigned, true)): ?>
                 <span class="status-pill"><?= htmlspecialchars($project->name ?? '') ?></span>
@@ -24,8 +24,8 @@
             <?php endforeach; ?>
             <?php if (!$assigned): ?><span class="muted">No project access</span><?php endif; ?>
           </td>
-          <td><span class="status-pill"><?= !isset($subadmin->active) || $subadmin->active ? 'Active' : 'Inactive' ?></span></td>
-          <td class="actions">
+          <td data-label="Status"><span class="status-pill <?= !isset($subadmin->active) || $subadmin->active ? 'is-paid' : 'is-due' ?>"><?= !isset($subadmin->active) || $subadmin->active ? 'Active' : 'Inactive' ?></span></td>
+          <td data-label="Actions" class="actions">
             <button class="link-button" type="button" data-modal-open="subadmin-edit-<?= $id ?>">Edit</button>
             <form method="post" action="/subadmins/<?= $id ?>/delete" data-confirm="Delete this subadmin?">
               <input type="hidden" name="_csrf" value="<?= htmlspecialchars(Csrf::token()) ?>">

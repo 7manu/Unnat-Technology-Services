@@ -34,6 +34,15 @@ final class AdminUser
         return $this->collection->findOne(['email' => strtolower(trim($email)), 'active' => true]);
     }
 
+    /** Users of a role who have been given access to one project. */
+    public function allForProject(string $projectId, string $role = 'client'): array
+    {
+        return iterator_to_array($this->collection->find(
+            ['role' => $role, 'project_ids' => $projectId],
+            ['sort' => ['created_at' => 1]]
+        ));
+    }
+
     public function create(array $data): string
     {
         $now = new \MongoDB\BSON\UTCDateTime();
@@ -71,6 +80,24 @@ final class AdminUser
         }
         $role = $data['role'] ?? 'subadmin';
         $result = $this->collection->updateOne(['_id' => new ObjectId($id), 'role' => $role], ['$set' => $payload]);
+        return $result->getMatchedCount() > 0;
+    }
+
+    /** Replaces only the password, used by the credential share flow. */
+    public function setPassword(string $id, string $password, string $role = 'client'): bool
+    {
+        if (!$this->validId($id)) {
+            return false;
+        }
+
+        $result = $this->collection->updateOne(
+            ['_id' => new ObjectId($id), 'role' => $role],
+            ['$set' => [
+                'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                'updated_at' => new \MongoDB\BSON\UTCDateTime(),
+            ]]
+        );
+
         return $result->getMatchedCount() > 0;
     }
 

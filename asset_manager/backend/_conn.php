@@ -1,4 +1,6 @@
 <?php
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 $host = "localhost";
 // $db = "asset-manager";  // renamed database
 // $user = "root";
@@ -7,9 +9,7 @@ $host = "localhost";
 // Prod
 $db = "u770637491_saajdecors";
 $user = "u770637491_saajdecors";
-$pass = "Cherry@125"; 
+$pass = "Cherry@125";
 $conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+$conn->set_charset('utf8mb4');
 ?>

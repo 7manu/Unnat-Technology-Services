@@ -1,0 +1,33 @@
+# Unnat Technology Services — public site routing
+#
+# index.php now renders the homepage; contact.html, sitemap.xml and robots.txt
+# keep their public URLs but are produced by PHP so the admin panel can edit them.
+
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteRule ^contact\.html$ contact.php [L]
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+  RewriteRule ^robots\.txt$ robots.php [L]
+</IfModule>
+
+ErrorDocument 404 /404.php
+
+# Never serve the local database credentials directly.
+<FilesMatch "^(\.env|_conn\.local\.php|_conn\.example\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
