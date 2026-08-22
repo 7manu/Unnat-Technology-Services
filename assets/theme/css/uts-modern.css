@@ -2633,3 +2633,19 @@ h3 {
 }
 
 .post-card-button { margin-top: auto; }
+
+/* Wide page template — cover image runs the full width of the viewport. */
+.post-cover-wide {
+  margin: 0 0 10px;
+}
+
+.post-cover-wide img {
+  max-height: 420px;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+@media (max-width: 720px) {
+  .post-cover-wide img { max-height: 240px; }
+}

@@ -1,12 +1,27 @@
-# Uploaded media only — never execute anything from this folder.
-php_flag engine off
+# Uploaded media only — nothing in this folder may ever be executed.
+#
+# php_flag is understood only by mod_php. On a server running PHP-FPM,
+# LiteSpeed lsphp, suPHP or CGI an unguarded php_flag makes Apache return
+# 500 for every request to this folder, which breaks all uploaded images.
+# It is guarded below, and the real protection is the FilesMatch deny plus
+# RemoveHandler, both of which work on every server.
 
-<IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header set Content-Security-Policy "script-src 'none'; object-src 'none'"
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php5.c>
+  php_flag engine off
 </IfModule>
 
-<FilesMatch "\.(php|php\d|phtml|phar|cgi|pl|py|sh|html?)$">
+<IfModule mod_mime.c>
+  RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .cgi .pl .py .sh
+  RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar
+</IfModule>
+
+<FilesMatch "\.(php|php\d|phtml|phar|cgi|pl|py|sh)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -15,3 +30,8 @@ php_flag engine off
     Deny from all
   </IfModule>
 </FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Content-Security-Policy "script-src 'none'; object-src 'none'"
+</IfModule>

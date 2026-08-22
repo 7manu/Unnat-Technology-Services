@@ -46,8 +46,9 @@ require __DIR__ . '/backend/partials/page_open.php';
         </div>
       </section>
 
-      <?php if ($template !== 'wide' && (string) $page['cover_image'] !== ''): ?>
-        <div class="container post-cover"><img src="<?= e((string) $page['cover_image']) ?>" alt="<?= e((string) $page['title']) ?>" loading="eager" decoding="async" /></div>
+      <?php if ((string) $page['cover_image'] !== ''): ?>
+        <?php /* Wide pages run the cover edge to edge; the others keep it inside the container. */ ?>
+        <div class="<?= $template === 'wide' ? 'post-cover post-cover-wide' : 'container post-cover' ?>"><img src="<?= e((string) $page['cover_image']) ?>" alt="<?= e((string) $page['title']) ?>" loading="eager" decoding="async" /></div>
       <?php endif; ?>
 
       <section class="section">
