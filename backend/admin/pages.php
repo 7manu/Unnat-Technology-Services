@@ -2,6 +2,13 @@
 /** Custom page builder — create, edit and delete pages with their own SEO. */
 declare(strict_types=1);
 
+require_once __DIR__ . '/../cms_blocks.php';
+
+$mediaLibrary = array_map(
+    static fn(array $row): array => ['path' => (string) $row['file_path'], 'alt' => (string) $row['alt_text']],
+    admin_rows('SELECT `file_path`, `alt_text` FROM `cms_media` ORDER BY `id` DESC')
+);
+
 $editing = isset($_GET['id']);
 $pageId = (string) ($_GET['id'] ?? '');
 $page = null;
@@ -22,6 +29,7 @@ $defaults = [
     'cover_image' => '',
     'description' => '',
     'body' => "<h2>Section heading</h2>\n<p>Write the first paragraph of the page here. Use the heading, paragraph and list tags to structure the content — the site styling is applied automatically.</p>\n<ul>\n  <li>First supporting point</li>\n  <li>Second supporting point</li>\n</ul>\n<h2>Second heading</h2>\n<p>Close with what the visitor should do next.</p>",
+    'sections' => '',
     'template' => cms_setting('page_default_template', 'standard'),
     'status' => 'draft',
     'show_in_nav' => 0,
@@ -71,11 +79,35 @@ $form = $page !== null ? array_merge($defaults, $page) : $defaults;
         <div class="admin-field"><label for="cover_upload">Cover image — upload</label><input id="cover_upload" name="cover_upload" type="file" accept="image/*" /></div>
         <div class="admin-field"><label for="cover_image">Cover image — path</label><input id="cover_image" name="cover_image" type="text" value="<?= e((string) $form['cover_image']) ?>" placeholder="assets/uploads/cover.webp" /><?php if ((string) $form['cover_image'] !== ''): ?><img class="content-image-preview" src="<?= e((string) $form['cover_image']) ?>" alt="Current cover image" loading="lazy" /><?php endif; ?><span class="hint">If no thumbnail appears here, the path is wrong — copy it again from the <a href="admin.php?view=media">media library</a>.</span></div>
         <div class="admin-field full"><label for="description">Short description</label><textarea id="description" name="description" rows="2" data-counter="160"><?= e((string) $form['description']) ?></textarea><span class="hint">Shown under the page title and used as the fallback meta description.</span></div>
-        <div class="admin-field"><label for="template">Layout template</label><?= admin_select('template', ['standard' => 'Standard — cover image above the content', 'wide' => 'Wide — full-width content and edge-to-edge cover', 'landing' => 'Landing — cover plus closing call to action'], (string) $form['template'], 'template') ?></div>
+        <div class="admin-field"><label for="template">Layout template</label><?= admin_select('template', ['standard' => 'Standard — title, cover image, then content', 'wide' => 'Wide — full-width content and edge-to-edge cover', 'landing' => 'Landing — cover plus closing call to action', 'minimal' => 'Blank canvas — no title bar, sections only'], (string) $form['template'], 'template') ?></div>
         <div class="admin-field"><label for="status">Status</label><?= admin_select('status', ['draft' => 'Draft (hidden)', 'published' => 'Published (live)'], (string) $form['status'], 'status') ?></div>
-        <div class="admin-field full"><label for="body">Page content</label><textarea id="body" name="body" class="tall"><?= e((string) $form['body']) ?></textarea><span class="hint">HTML is allowed: headings, paragraphs, lists, links, images, tables and quotes. Scripts and iframes are removed automatically.</span></div>
+        <div class="admin-field full"><label for="body">Opening text <span class="hint-inline">optional</span></label><textarea id="body" name="body" class="tall"><?= e((string) $form['body']) ?></textarea><span class="hint">Plain text that appears before the sections below. Leave it empty and build the whole page from section blocks instead. HTML is allowed; scripts and iframes are removed automatically.</span></div>
       </div>
     </div>
+
+    <div class="admin-card" data-block-card>
+      <h2>Page sections</h2>
+      <p>Build the page from blocks. Add as many as you like, drag the arrows to reorder, and every block that shows a picture has its own image field.</p>
+
+      <div class="block-builder" data-block-builder>
+        <div class="block-list" data-block-list></div>
+
+        <div class="block-add">
+          <span class="block-add-label">Add a section</span>
+          <div class="block-add-buttons" data-block-add-buttons></div>
+        </div>
+      </div>
+
+      <div class="block-fallback" data-block-fallback hidden>
+        <p class="hint">The visual builder needs JavaScript. The raw section data is below and can still be edited by hand.</p>
+      </div>
+
+      <label class="block-json" for="sections_json">Section data (JSON)</label>
+      <textarea id="sections_json" name="sections_json" class="code" rows="6" data-block-json><?= e($form['sections'] !== '' ? (string) $form['sections'] : '[]') ?></textarea>
+    </div>
+
+    <script id="block-definitions" type="application/json"><?= json_encode(['types' => cms_block_types(), 'common' => cms_block_common_fields()], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+    <script id="block-media" type="application/json"><?= json_encode($mediaLibrary, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
 
     <div class="admin-card">
       <h2>Menu placement</h2>

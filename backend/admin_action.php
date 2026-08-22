@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/admin/_helpers.php';
+require_once __DIR__ . '/cms_blocks.php';
 requireAdmin('../login.php');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !verifyAdminCsrf()) {
@@ -92,7 +93,8 @@ try {
                 'cover_image' => $cover,
                 'description' => admin_post('description'),
                 'body' => cms_sanitize_html((string) ($_POST['body'] ?? '')),
-                'template' => admin_enum('template', ['standard', 'wide', 'landing'], 'standard'),
+                'sections' => json_encode(cms_sections_normalise($_POST['sections_json'] ?? ''), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'template' => admin_enum('template', ['standard', 'wide', 'landing', 'minimal'], 'standard'),
                 'status' => admin_enum('status', ['draft', 'published'], 'draft'),
                 'show_in_nav' => (string) (admin_post_bool('show_in_header') || admin_post_bool('show_in_mobile') || admin_post_bool('show_in_footer') ? 1 : 0),
                 'show_in_header' => (string) admin_post_bool('show_in_header'),

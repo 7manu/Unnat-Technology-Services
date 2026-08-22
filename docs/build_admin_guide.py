@@ -450,12 +450,13 @@ story.append(table([
     ["Cover image", "Upload a file, or paste a path from the media library. Optional."],
     ["Short description", "One or two sentences below the title. Also used as the Google description "
                           "if you leave the SEO section empty."],
-    ["Page content", "The body. See the formatting note below."],
+    ["Opening text", "Optional. Plain text shown before the sections. Leave it empty and build "
+                     "the whole page from section blocks instead."],
 ], [4 * cm, 12.4 * cm]))
 
-story.append(para("Writing the body", "h2"))
-story.append(para("The content box accepts simple HTML tags. A new page is pre-filled with an example "
-                  "showing the pattern - type over it. The tags you need:", "body"))
+story.append(para("Writing in the opening text box", "h2"))
+story.append(para("The opening text box and the Text block both accept simple HTML tags. The tags you "
+                  "need:", "body"))
 
 story.append(table([
     ["To get", "Type"],
@@ -470,6 +471,40 @@ story.append(table([
 story.append(para("Styling is applied automatically to match the rest of the site - do not try to set "
                   "colours or fonts. Scripts and embedded frames are stripped out for safety when you "
                   "save.", "body"))
+
+story.append(para("Building the page from sections", "h2"))
+story.append(para("Under <b>Page sections</b> you build the page from ready-made blocks. Press a block "
+                  "name to add it, fill in its fields, and use the arrow buttons to move it up or down. "
+                  "Every block that shows a picture has its own image field with a <b>Choose image</b> "
+                  "button that opens the media library.", "body"))
+
+story.append(table([
+    ["Block", "What it puts on the page"],
+    ["Text", "A heading and a paragraph of formatted text, left aligned or centred."],
+    ["Image + text", "A picture beside a paragraph, with the image on the left or the right, "
+                     "and an optional button."],
+    ["Banner", "A wide image with a heading over it. Good as a page opener."],
+    ["Card grid", "Two to four columns of cards. Each card has its own image or icon, title, "
+                  "text and link."],
+    ["Image gallery", "A grid of pictures with optional captions."],
+    ["Statistics", "A row of numbers that count up as the visitor scrolls."],
+    ["Questions and answers", "An expandable list. It also produces FAQ data for Google, which can "
+                              "show your questions directly in search results."],
+    ["Quote", "A pulled-out quote or client statement, with an optional photo."],
+    ["Logo strip", "A row of client or partner logos."],
+    ["Video", "A YouTube video. Paste the link or just the video ID."],
+    ["Call to action", "A panel that asks the visitor to do something, in a soft or dark style."],
+    ["Divider / spacing", "Blank space, with or without a line."],
+], [4.2 * cm, 12.2 * cm]))
+
+story.append(para("Every block also has a <b>Background</b> setting - plain, a soft tint, or dark. "
+                  "Alternating plain and tinted backgrounds down a page is the easiest way to make a "
+                  "long page readable.", "body"))
+
+story.append(callout("Blocks are safer than typing HTML",
+                     "The section blocks produce styling that matches the rest of the site "
+                     "automatically. Use them in preference to the opening text box whenever you can - "
+                     "you cannot break the layout with a block.", "good"))
 
 story.append(para("Choosing where the page appears in the menus", "h2"))
 story.append(para("The <b>Menu placement</b> box has three independent tick boxes. Tick any combination:", "body"))
@@ -496,9 +531,10 @@ story.append(para("A new page starts as a <b>Draft</b> and is invisible to visit
 
 story.append(para("Layout templates", "h3"))
 story.append(bullets([
-    "<b>Standard</b> - cover image across the top, then the content in a comfortable reading width. Use this unless you have a reason not to.",
-    "<b>Wide</b> - full-width content and no cover image. Good for pages with tables or many images.",
+    "<b>Standard</b> - title bar, cover image, then the content in a comfortable reading width. Use this unless you have a reason not to.",
+    "<b>Wide</b> - full-width content with the cover image running edge to edge. Good for pages with tables or many images.",
     "<b>Landing</b> - cover image plus an automatic \"start a conversation\" block at the bottom. Good for campaign pages.",
+    "<b>Blank canvas</b> - no title bar and no cover at all, so your first section block becomes the top of the page. Use it with a Banner block for a fully designed page.",
 ]))
 
 story.append(para("The SEO section of the page form is explained in section 9 - the fields are the "

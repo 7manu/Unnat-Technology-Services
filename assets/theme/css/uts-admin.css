@@ -585,3 +585,200 @@ a { color: inherit; }
   background: #fff8e6;
   box-shadow: inset 3px 0 0 var(--blue-500);
 }
+
+/* ---------------------------------------------------------------------
+   Page section builder
+   ------------------------------------------------------------------ */
+.block-builder { display: grid; gap: 14px; }
+.block-list { display: grid; gap: 12px; }
+
+.block-card {
+  background: #fff;
+  border: 1px solid rgba(20, 32, 60, 0.14);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.block-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 14px;
+  background: #f7f9fc;
+  border-bottom: 1px solid rgba(20, 32, 60, 0.09);
+}
+
+.block-badge {
+  padding: 4px 11px;
+  background: var(--ink-950);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.block-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-600);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.block-controls { display: flex; gap: 6px; }
+.block-card-body { padding: 16px 14px; }
+
+.block-items {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(20, 32, 60, 0.18);
+}
+
+.block-items-title {
+  margin: 0 0 10px;
+  color: var(--ink-700);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.block-item {
+  margin-bottom: 10px;
+  padding: 12px;
+  background: #fbfcfe;
+  border: 1px solid rgba(20, 32, 60, 0.1);
+  border-radius: 12px;
+}
+
+.block-item-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.block-item-index { color: var(--ink-600); font-size: 0.78rem; font-weight: 700; }
+
+.block-image-tools { display: flex; gap: 6px; margin-top: 2px; }
+
+.block-add {
+  padding: 14px;
+  background: #f7f9fc;
+  border: 1px dashed rgba(20, 32, 60, 0.2);
+  border-radius: 14px;
+}
+
+.block-add-label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--ink-700);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.block-add-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.block-empty {
+  padding: 26px;
+  border: 1px dashed rgba(20, 32, 60, 0.18);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.block-empty p { margin: 4px 0 0; }
+
+/* The raw JSON is a fallback, so it folds away once the builder loads. */
+.admin-card.has-builder .block-json,
+.admin-card.has-builder [data-block-json] {
+  display: none;
+}
+
+.hint-inline {
+  color: #8a93a8;
+  font-size: 0.74rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Media picker ------------------------------------------------------ */
+.media-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(12, 20, 38, 0.55);
+}
+
+.media-picker[hidden] { display: none; }
+
+.media-picker-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100%);
+  max-height: min(720px, 88vh);
+  padding: 18px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(10, 20, 45, 0.35);
+}
+
+.media-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.media-picker-head h3 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+
+.media-picker-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.media-picker-item {
+  padding: 8px;
+  background: #fff;
+  border: 1px solid rgba(20, 32, 60, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.media-picker-item:hover { border-color: var(--blue-500); background: #fffdf5; }
+
+.media-picker-item img {
+  width: 100%;
+  height: 96px;
+  object-fit: contain;
+  background: #f7f9fc;
+  border-radius: 8px;
+}
+
+.media-picker-item code {
+  display: block;
+  margin-top: 6px;
+  color: #6b7689;
+  font-size: 0.66rem;
+  word-break: break-all;
+}
+
+.media-picker-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(20, 32, 60, 0.08);
+}

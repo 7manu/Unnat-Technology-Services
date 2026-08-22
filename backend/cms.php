@@ -19,7 +19,7 @@ declare(strict_types=1);
  * stored in cms_settings and only runs the installer when they differ, so a
  * normal page load costs nothing.
  */
-const CMS_SCHEMA_VERSION = '2026.08.09';
+const CMS_SCHEMA_VERSION = '2026.08.10';
 
 /* =====================================================================
  * Connection
@@ -1011,6 +1011,7 @@ function cms_schema_statements(): array
             `cover_image` VARCHAR(255) NOT NULL DEFAULT '',
             `description` TEXT NULL,
             `body` MEDIUMTEXT NULL,
+            `sections` LONGTEXT NULL,
             `template` VARCHAR(40) NOT NULL DEFAULT 'standard',
             `status` VARCHAR(20) NOT NULL DEFAULT 'draft',
             `show_in_nav` TINYINT(1) NOT NULL DEFAULT 0,
@@ -1199,6 +1200,7 @@ function cms_schema_upgrades(): array
             'visibility' => "VARCHAR(10) NOT NULL DEFAULT 'all' AFTER `rel`",
         ],
         'cms_pages' => [
+            'sections' => 'LONGTEXT NULL AFTER `body`',
             'show_in_header' => 'TINYINT(1) NOT NULL DEFAULT 0 AFTER `show_in_nav`',
             'show_in_mobile' => 'TINYINT(1) NOT NULL DEFAULT 0 AFTER `show_in_header`',
             'show_in_footer' => 'TINYINT(1) NOT NULL DEFAULT 0 AFTER `show_in_mobile`',
