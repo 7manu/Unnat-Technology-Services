@@ -83,21 +83,44 @@ function cms_safe_external_url(?string $url): string
     return in_array($scheme, ['http', 'https'], true) ? $url : '#';
 }
 
-/** Accepts internal paths, anchors, mailto/tel and absolute http(s) links. */
+/**
+ * Accepts internal paths, anchors, query strings, mailto/tel and absolute
+ * http(s) links. Anything carrying another scheme (javascript:, data:) or
+ * pointing off-site protocol-relatively is replaced by the fallback.
+ */
 function cms_safe_link(?string $url, string $fallback = '#'): string
 {
     $url = trim($url ?? '');
     if ($url === '') {
         return $fallback;
     }
-    if (preg_match('#^(https?://|mailto:|tel:|/|\#|\?)#i', $url) === 1) {
-        return $url;
-    }
-    if (preg_match('#^[A-Za-z0-9._~\-/]+(\.(php|html|htm))?(\#[^\s]*)?$#', $url) === 1) {
+
+    /* Absolute links we allow. */
+    if (preg_match('#^(https?://|mailto:|tel:)#i', $url) === 1) {
         return $url;
     }
 
-    return $fallback;
+    /* //evil.com would silently leave the site. */
+    if (str_starts_with($url, '//')) {
+        return $fallback;
+    }
+
+    /* Root-relative paths, bare fragments and bare query strings. */
+    if (preg_match('#^[/\#?]#', $url) === 1) {
+        return $url;
+    }
+
+    /* Any other scheme is rejected before the relative branch below. */
+    if (preg_match('#^[a-z][a-z0-9+.\-]*:#i', $url) === 1) {
+        return $fallback;
+    }
+
+    /*
+     * Everything left is a same-site relative link, with an optional query
+     * string and fragment: products.php, page.php?slug=services,
+     * index.php#services, blog.php?post=my-article#top
+     */
+    return $url;
 }
 
 function cms_excerpt(string $html, int $length = 160): string
