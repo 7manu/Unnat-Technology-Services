@@ -434,30 +434,39 @@ function cms_block_banner(array $block): string
     }
 
     $height = (string) ($block['height'] ?? 'normal');
-    $style = $image !== '' ? ' style="background-image:url(\'' . e(cms_encode_path($image)) . '\')"' : '';
-
-    $inner = '<div class="container">';
+    $button = cms_block_button($block);
+    $text = '';
     if ($heading !== '') {
-        $inner .= '<h2>' . e($heading) . '</h2>';
+        $text .= '<h2>' . e($heading) . '</h2>';
     }
     if (($block['body'] ?? '') !== '') {
-        $inner .= '<p>' . nl2br(e((string) $block['body'])) . '</p>';
+        $text .= '<p>' . nl2br(e((string) $block['body'])) . '</p>';
     }
-    $inner .= cms_block_button($block) . '</div>';
+    $text .= $button;
+    $hasText = $text !== '';
 
-    return '<section class="pb-banner pb-banner-' . e($height) . ($image !== '' ? ' has-image' : '') . '"' . $style . '>'
-        . ($image !== '' ? '<span class="pb-banner-veil" aria-hidden="true"></span>' : '')
-        . $inner . '</section>';
-}
-
-/** Percent-encodes each path segment for use in a CSS url(), keeping slashes. */
-function cms_encode_path(string $path): string
-{
-    if (preg_match('#^https?://#i', $path) === 1) {
-        return $path;
+    $classes = 'pb-banner pb-banner-' . $height;
+    if ($image !== '') {
+        $classes .= ' has-image';
+    }
+    if ($hasText) {
+        $classes .= ' has-text';
     }
 
-    return implode('/', array_map('rawurlencode', explode('/', $path)));
+    $out = '<section class="' . e($classes) . '">';
+
+    /* A real <img> rather than a background, so the whole picture is shown. */
+    if ($image !== '') {
+        $out .= '<img class="pb-banner-image" src="' . e($image) . '" alt="' . e((string) ($block['image_alt'] ?? '')) . '" loading="lazy" decoding="async" />';
+        if ($hasText) {
+            $out .= '<span class="pb-banner-veil" aria-hidden="true"></span>';
+        }
+    }
+    if ($hasText) {
+        $out .= '<div class="pb-banner-body"><div class="container">' . $text . '</div></div>';
+    }
+
+    return $out . '</section>';
 }
 
 function cms_block_cards(array $block): string

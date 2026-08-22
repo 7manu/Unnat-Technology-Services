@@ -2407,9 +2407,9 @@ h3 {
 }
 
 .post-cover img {
+  display: block;
   width: 100%;
-  max-height: 460px;
-  object-fit: cover;
+  height: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -2571,7 +2571,7 @@ h3 {
 
 @media (max-width: 720px) {
   .post-cover { margin-top: -10px; }
-  .post-cover img { max-height: 260px; border-radius: var(--radius-md); }
+  .post-cover img { border-radius: var(--radius-md); }
   .post-body { font-size: 1rem; }
 }
 
@@ -2602,15 +2602,20 @@ h3 {
   align-items: flex-start;
 }
 
+/* Article cards drop the padded 16:10 frame the product cards use, so the
+   cover is shown whole at its own proportions. */
 .post-card-image {
   display: block;
+  padding: 0;
   overflow: hidden;
+  aspect-ratio: auto;
+  background: none;
 }
 
 .post-card-image img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   transition: transform 400ms ease;
 }
 
@@ -2640,15 +2645,12 @@ h3 {
 }
 
 .post-cover-wide img {
-  max-height: 420px;
   border-right: 0;
   border-left: 0;
   border-radius: 0;
 }
 
-@media (max-width: 720px) {
-  .post-cover-wide img { max-height: 240px; }
-}
+
 
 /* ---------------------------------------------------------------------
    Page section blocks (built in Admin -> Pages -> Page sections)
@@ -2704,24 +2706,40 @@ h3 {
   position: relative;
   display: grid;
   align-items: center;
-  padding-block: clamp(56px, 9vw, 120px);
-  background-position: center;
-  background-size: cover;
   text-align: center;
 }
 
-.pb-banner-short { padding-block: clamp(36px, 6vw, 70px); }
-.pb-banner-tall { padding-block: clamp(80px, 14vw, 190px); }
+/* The whole picture is always shown — never cropped to fit a fixed height. */
+.pb-banner-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pb-banner:not(.has-image) { padding-block: clamp(56px, 9vw, 120px); }
+.pb-banner:not(.has-image).pb-banner-short { padding-block: clamp(36px, 6vw, 70px); }
+.pb-banner:not(.has-image).pb-banner-tall { padding-block: clamp(80px, 14vw, 190px); }
 
 .pb-banner-veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(7, 17, 38, 0.55), rgba(7, 17, 38, 0.72));
+  background: linear-gradient(180deg, rgba(7, 17, 38, 0.45), rgba(7, 17, 38, 0.7));
 }
 
 .pb-banner .container { position: relative; z-index: 1; }
-.pb-banner.has-image h2,
-.pb-banner.has-image p { color: #fff; }
+
+/* With both a picture and text, the text sits over the picture on wide
+   screens and drops underneath it on narrow ones, so it never overlaps. */
+.pb-banner.has-image.has-text .pb-banner-body {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  align-items: center;
+}
+
+.pb-banner.has-image.has-text h2,
+.pb-banner.has-image.has-text p { color: #fff; }
 
 .pb-banner h2 {
   margin: 0 0 12px;
@@ -2756,8 +2774,8 @@ h3 {
   box-shadow: var(--shadow-sm);
 }
 
-.pb-card-media { aspect-ratio: 16 / 10; overflow: hidden; }
-.pb-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.pb-card-media { overflow: hidden; }
+.pb-card-media img { display: block; width: 100%; height: auto; }
 .pb-card .service-icon { margin: 22px 22px 0; }
 
 .pb-card-body {
@@ -2782,9 +2800,9 @@ h3 {
 .pb-gallery figure { margin: 0; }
 
 .pb-gallery img {
+  display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  height: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
 }
@@ -2829,11 +2847,11 @@ h3 {
 }
 
 .pb-quote img {
-  width: 74px;
-  height: 74px;
+  width: auto;
+  max-width: 110px;
+  max-height: 110px;
   margin-bottom: 16px;
-  object-fit: cover;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
 }
 
 .pb-quote blockquote {
@@ -2912,6 +2930,13 @@ h3 {
 }
 
 @media (max-width: 760px) {
+  .pb-banner.has-image.has-text .pb-banner-body {
+    position: static;
+    padding-block: 26px;
+    background: var(--ink-950);
+  }
+  .pb-banner.has-image.has-text .pb-banner-veil { display: none; }
+
   .pb-media-text { grid-template-columns: 1fr; }
   .pb-media-text.is-reversed .pb-media { order: 0; }
   .pb-grid, .pb-cols-2, .pb-cols-4, .pb-gallery { grid-template-columns: 1fr; }
